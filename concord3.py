@@ -114,10 +114,52 @@ def cut_sides(ordered_body_lines):
         
 
 def generate_concordance(body_lines, exclusion_words):
-        
-        body_lines_capped = create_capped_body_lines(body_lines, exclusion_words)
-        ordered_body_lines = alphabetically_order_bodylines(body_lines_capped)
-        final_result = cut_sides(ordered_body_lines)
+        """Generate output without retaining one full line copy per keyword."""
+        exclusion_words = set(exclusion_words)
+        entries = []
+
+        for raw_line in body_lines:
+            words = raw_line.split()
+            normalized_line = " ".join(words)
+            word_start = 0
+
+            for word in words:
+                word_end = word_start + len(word)
+                if word.lower() not in exclusion_words:
+                    entries.append(
+                        (word.upper().lower(), normalized_line, word_start, word_end)
+                    )
+                word_start = word_end + 1
+
+        entries.sort(key=lambda item: item[0])
+        final_result = []
+
+        for _, line, keyword_start, keyword_end in entries:
+            left_start = 0
+            if keyword_start > 20:
+                left_start = keyword_start - 20
+                if line[left_start - 1] != " ":
+                    next_space = line.find(" ", left_start)
+                    left_start = next_space + 1
+
+            relative_keyword_start = keyword_start - left_start
+            right_end = len(line)
+            final_allowed_idx = left_start + relative_keyword_start + 30
+            if final_allowed_idx < len(line) - 1:
+                if line[final_allowed_idx + 1] == " ":
+                    right_end = final_allowed_idx + 1
+                else:
+                    right_end = line.rfind(
+                        " ", keyword_start, final_allowed_idx + 1
+                    )
+
+            context = (
+                line[left_start:keyword_start]
+                + line[keyword_start:keyword_end].upper()
+                + line[keyword_end:right_end]
+            )
+            final_result.append(" " * (29 - relative_keyword_start) + context)
+
         return final_result
        
 
@@ -133,7 +175,8 @@ def main ():
         
     body_lines_raw = extract_b_lines(file)
 
-    generate_concordance(body_lines_raw, exclusion_words_lower)
+    for line in generate_concordance(body_lines_raw, exclusion_words_lower):
+        print(line)
     
     
 

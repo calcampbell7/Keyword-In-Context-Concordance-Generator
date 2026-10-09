@@ -28,3 +28,9 @@ done
 echo
 echo "$passed passed"
 echo "$failed failed"
+
+if [ "$failed" -ne 0 ]; then
+    exit 1
+fi
+
+python3 -m unittest tests/test_backend.py
