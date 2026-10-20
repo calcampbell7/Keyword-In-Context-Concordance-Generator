@@ -3,6 +3,7 @@ import sys
 
 def extract_e_words(file):
 
+    hi = 1
     e_words = []
     line = file.readline()
     while line != "\"\"\"\"\n":
